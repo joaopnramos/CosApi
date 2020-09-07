@@ -6,6 +6,8 @@ import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.widget.TextView;
 
+import retrofit2.Call;
+
 public class DataCollector extends AppCompatActivity {
     private TextView id;
     private static final String ARQUIVO_PREFERENCIA = "ArquivoPreferencia";
@@ -18,6 +20,8 @@ public class DataCollector extends AppCompatActivity {
 
         SharedPreferences preferences = getSharedPreferences(ARQUIVO_PREFERENCIA, 0);
         String ric = preferences.getString("token", "Não encontrado");
+
+        Call<LoginResponse> call = RetrofitClient.getmInstance().getApi().login(username, password);
 
 
 

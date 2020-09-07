@@ -18,6 +18,9 @@ public interface Api {
                 @Field("username") String username, @Field("password") String password
     );
 
-    @Get("dataGiveStart/")
+    @GET("dataGiveStart/")
+    Call<DataGiveResponse>Data(
+            @Field("search") String id
+    );
 
 }
