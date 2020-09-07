@@ -2,6 +2,8 @@ package com.example.citizensonscience;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -18,6 +20,7 @@ import retrofit2.Response;
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
 
     private EditText editTextPassword, editTextUsername;
+    private static final String ARQUIVO_PREFERENCIA = "ArquivoPreferencia";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -49,16 +52,38 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         call.enqueue(new Callback<LoginResponse>() {
             @Override
             public void onResponse(Call<LoginResponse> call, Response<LoginResponse> response) {
+                //Caso exista uma resposta
 
-                String s = response.body().toString();
+                if(response.code() == 200) {
 
-                Toast.makeText(MainActivity.this, "bab", Toast.LENGTH_LONG).show();
+                    //Caso o login seja positivo
+                    String token = response.body().getToken();
+                    String id = response.body().getId();
+                    SharedPreferences preferences = getSharedPreferences(ARQUIVO_PREFERENCIA, 0);
+                    SharedPreferences.Editor editor = preferences.edit();
+                    editor.putString("token", token);
+                    editor.putString("id", id);
+                    editor.commit();
+                    Intent info = new Intent(getApplicationContext(), DataCollector.class);
+                    startActivity(info);
+                    Toast.makeText(MainActivity.this, "You are logged in", Toast.LENGTH_LONG).show();
+                    System.out.println(response);
 
+                }else{
+
+                    //Caso o login seja negativo
+                    Intent info = new Intent(getApplicationContext(), MainActivity.class);
+                    finish();
+                    startActivity(info);
+                    Toast.makeText(MainActivity.this, "Failed to login", Toast.LENGTH_LONG).show();
+                }
             }
 
             @Override
             public void onFailure(Call<LoginResponse> call, Throwable t) {
-                Toast.makeText(MainActivity.this, "hi", Toast.LENGTH_LONG).show();
+                //Caso não exista resposta por parte do servidor
+                Toast.makeText(MainActivity.this, "Failed to login", Toast.LENGTH_LONG).show();
+
 
             }
         });
@@ -70,6 +95,5 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     @Override
     public void onClick(View view) {
         userLogin();
-        Log.i("Info ","Done");
     }
 }
