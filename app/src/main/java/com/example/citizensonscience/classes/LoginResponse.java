@@ -1,4 +1,4 @@
-package com.example.citizensonscience;
+package com.example.citizensonscience.classes;
 
 public class LoginResponse {
 

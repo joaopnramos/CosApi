@@ -5,14 +5,13 @@ import androidx.appcompat.app.AppCompatActivity;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.Toast;
 
-import java.io.IOException;
+import com.example.citizensonscience.Netwowk.RetrofitClient;
+import com.example.citizensonscience.classes.LoginResponse;
 
-import okhttp3.ResponseBody;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -83,6 +82,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             public void onFailure(Call<LoginResponse> call, Throwable t) {
                 //Caso não exista resposta por parte do servidor
                 Toast.makeText(MainActivity.this, "Failed to login", Toast.LENGTH_LONG).show();
+                System.out.println(t.getMessage());
 
 
             }

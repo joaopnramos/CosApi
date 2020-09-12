@@ -1,4 +1,4 @@
-package com.example.citizensonscience;
+package com.example.citizensonscience.Netwowk;
 
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
