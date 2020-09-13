@@ -9,22 +9,28 @@ import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.os.Bundle;
+import android.text.format.Time;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.example.citizensonscience.Netwowk.RetrofitClient;
 import com.example.citizensonscience.classes.DataGiveResponse;
 import com.example.citizensonscience.classes.DonatorResponse;
+import com.example.citizensonscience.classes.Job;
 import com.example.citizensonscience.classes.Project;
 
+
+import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
+import java.util.Timer;
+import java.util.TimerTask;
 
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
-public class DataCollector extends AppCompatActivity implements SensorEventListener{
+public class DataCollector extends AppCompatActivity implements SensorEventListener {
     private TextView id;
     private static final String ARQUIVO_PREFERENCIA = "ArquivoPreferencia";
     private List<DataGiveResponse> projectList = new ArrayList<>();
@@ -32,18 +38,36 @@ public class DataCollector extends AppCompatActivity implements SensorEventListe
     private SensorManager mSensorManager = null;
     private Sensor mSensor;
     public String sensorName = "";
-    private Sensor sensortemperature, sensorProximity, sensorLight, sensorPressure;
+    private Sensor sensortemperature, sensorProximity, sensorAcelarato, sensorPressure;
     private SensorManager sensorManager;
-    public RunSensors rs = new RunSensors();
     public String aceelaration;
+    private Timer timeTask = new Timer();
+    private List<Job> jobs = new ArrayList<>();
+    private boolean bdone = false;
 
-
+    private int runTimes = 0;
 
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_data_collector);
+
+
+        sensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
+        sensorAcelarato = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+        sensorManager.registerListener((SensorEventListener) this, sensorAcelarato, sensorManager.SENSOR_DELAY_NORMAL);
+
+        sensorPressure = sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY);
+        sensorManager.registerListener((SensorEventListener) this, sensorPressure, sensorManager.SENSOR_DELAY_NORMAL);
+
+        sensorProximity = sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
+        sensorManager.registerListener((SensorEventListener) this, sensorProximity, sensorManager.SENSOR_DELAY_NORMAL);
+
+
+        sensortemperature = sensorManager.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR);
+        sensorManager.registerListener((SensorEventListener) this, sensortemperature, sensorManager.SENSOR_DELAY_NORMAL);
+
 
         id = findViewById(R.id.textView2);
 
@@ -53,31 +77,23 @@ public class DataCollector extends AppCompatActivity implements SensorEventListe
         final String sendToken = "Token \t" + token;
         final String[] iddonator = new String[1];
         final String[] sensorsArray = {"temperature", "Proximity", "Light", "pressure"};
-        sensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
+
 
         //Saber o id do donator
         Call<List<DonatorResponse>> calld = RetrofitClient.getmInstance().getApi().userDonator(iduser, sendToken);
-        calld.enqueue(new Callback<List<DonatorResponse>>() {
-            @Override
-            public void onResponse(Call<List<DonatorResponse>> call, Response<List<DonatorResponse>> response) {
+        try {
+            donoList = calld.execute().body();
+            for (int i = 0; i < donoList.size(); i++) {
+                final DonatorResponse dono = donoList.get(i);
+                String idDonaotr = dono.getId();
+                SharedPreferences.Editor editor = preferences.edit();
+                editor.putString("iddonator", idDonaotr);
+                editor.commit();
 
-
-                donoList = response.body();
-                for (int i=0; i<donoList.size(); i++){
-                    final DonatorResponse dono = donoList.get(i);
-                    String idDonaotr = dono.getId();
-
-                    SharedPreferences preferences = getSharedPreferences(ARQUIVO_PREFERENCIA, 0);
-                    SharedPreferences.Editor editor = preferences.edit();
-                    editor.putString("iddonator", idDonaotr );
-                    editor.commit();
-                }
             }
-
-            @Override
-            public void onFailure(Call<List<DonatorResponse>> call, Throwable t) {
-            }
-        });
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
 
 
         //Id donator
@@ -85,80 +101,73 @@ public class DataCollector extends AppCompatActivity implements SensorEventListe
 
 
         Call<List<DataGiveResponse>> call = RetrofitClient.getmInstance().getApi().DataDataGive(idDonator, sendToken);
-        call.enqueue(new Callback<List<DataGiveResponse>>(){
 
-            @Override
-            public void onResponse(Call<List<DataGiveResponse>> call, Response<List<DataGiveResponse>> response) {
+        try {
+            projectList = call.execute().body();
+            for (int i = 0; i < projectList.size(); i++) {
+                //Consigo obter o id de todos os projeto;
+                final DataGiveResponse project = projectList.get(i);
+                //id dos projetos
+                final String projectid = project.getProjectid();
 
-                projectList = response.body();
-                for (int i=0; i<projectList.size(); i++){
-                    //Consigo obter o id de todos os projeto;
-                    final DataGiveResponse project = projectList.get(i);
-                    //id dos projetos
-                    final String projectid = project.getId();
+                Call<Project> info = RetrofitClient.getmInstance().getApi().infoProjeto(projectid, sendToken);
 
-                    Call<Project> info = RetrofitClient.getmInstance().getApi().infoProjeto(projectid, sendToken);
-                    info.enqueue(new Callback<Project>() {
-                        @Override
-                        public void onResponse(Call<Project> call, Response<Project> response) {
-
-                            int timesRun =response.body().getPeriodChoice();
-                            int i = 0;
-                            while(i < 2){
-                                int j;
-                                for (j=0; j< sensorsArray.length; j++){
-
-                                    sensorName = sensorsArray[j];
-                                    rs.run();
-                                    System.out.println(aceelaration + "1");
-
-
-
-                                }
-
-                                i++;
-                            };
-
-                        }
-
-                        @Override
-                        public void onFailure(Call<Project> call, Throwable t) {
-
-                            System.out.println("Não ouve resposta por parte do id ");
-
-                        }
-                    });
+                Project proj = null;
+                try {
+                    proj = info.execute().body();
+                    final int timesRun = proj.getPeriodChoice();
+                    timeTask = new Timer();
+                    Job j = new Job();
+                    j.setPeriod(proj.getSpacetimeChoice());
+                    j.setId(projectid);
+                    j.setTimesToRun(timesRun);
+                    jobs.add(j);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                    System.out.println("Não ouve resposta por parte do id ");
                 }
-            }
+        }}
+        catch (IOException ex) {
+            ex.printStackTrace();
+            System.out.println("Não ouve resposta");
+        }
 
 
-            @Override
-            public void onFailure(Call<List<DataGiveResponse>> call, Throwable t) {
-                System.out.println("Não ouve resposta");
-            }
-        });
-}
+
+        for (Job j : jobs) {
+            timeTask.scheduleAtFixedRate(j, 1000, j.getPeriod()*1000);
+        }
+
+    }
 
     @Override
     public void onSensorChanged(SensorEvent sensorEvent) {
 
-        if(sensorEvent.sensor.getType()==Sensor.TYPE_ACCELEROMETER){
-            aceelaration = String.valueOf(sensorEvent.values[0]);
-
-
-
-        }
-        if(sensorEvent.sensor.getType()==Sensor.TYPE_GRAVITY){
-            System.out.println(String.valueOf(sensorEvent.values[0]));
+        if (sensorEvent.sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
+            for (Job j : jobs) {
+                j.setS1(String.valueOf(sensorEvent.values[0]));
+            }
 
 
         }
-        if(sensorEvent.sensor.getType()==Sensor.TYPE_GYROSCOPE){
-            System.out.println(String.valueOf(sensorEvent.values[0]));
+        if (sensorEvent.sensor.getType() == Sensor.TYPE_GRAVITY) {
+            for (Job j : jobs) {
+                j.setS2(String.valueOf(sensorEvent.values[0]));
+            }
+
 
         }
-        if(sensorEvent.sensor.getType()==Sensor.TYPE_ROTATION_VECTOR){
-            System.out.println(String.valueOf(sensorEvent.values[0]) + String.valueOf(sensorEvent.values[1]) );
+        if (sensorEvent.sensor.getType() == Sensor.TYPE_GYROSCOPE) {
+            for (Job j : jobs) {
+                j.setS3(String.valueOf(sensorEvent.values[0]));
+            }
+
+
+        }
+        if (sensorEvent.sensor.getType() == Sensor.TYPE_ROTATION_VECTOR) {
+            for (Job j : jobs) {
+                j.setS4(String.valueOf(sensorEvent.values[0]));
+            }
 
 
         }
@@ -169,13 +178,14 @@ public class DataCollector extends AppCompatActivity implements SensorEventListe
     public void onAccuracyChanged(Sensor sensor, int i) {
 
     }
+
     @Override
     protected void onResume() {
         super.onResume();
-        sensorManager.registerListener((SensorEventListener) this,sensorLight,sensorManager.SENSOR_DELAY_NORMAL);
-        sensorManager.registerListener((SensorEventListener) this,sensorPressure,sensorManager.SENSOR_DELAY_NORMAL);
-        sensorManager.registerListener((SensorEventListener) this,sensorProximity,sensorManager.SENSOR_DELAY_NORMAL);
-        sensorManager.registerListener((SensorEventListener) this,sensortemperature,sensorManager.SENSOR_DELAY_NORMAL);
+        sensorManager.registerListener((SensorEventListener) this, sensorAcelarato, sensorManager.SENSOR_DELAY_NORMAL);
+        sensorManager.registerListener((SensorEventListener) this, sensorPressure, sensorManager.SENSOR_DELAY_NORMAL);
+        sensorManager.registerListener((SensorEventListener) this, sensorProximity, sensorManager.SENSOR_DELAY_NORMAL);
+        sensorManager.registerListener((SensorEventListener) this, sensortemperature, sensorManager.SENSOR_DELAY_NORMAL);
 
     }
 
@@ -191,24 +201,5 @@ public class DataCollector extends AppCompatActivity implements SensorEventListe
         super.onStop();
     }
 
-    class RunSensors extends Thread{
 
-        @Override
-        public void run() {
-            super.run();
-            runs();
-            System.out.println();
-
-
-        }
-
-
-    }
-
-
-    public void runs(){
-        sensorLight = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
-        sensorManager.registerListener((SensorEventListener) this,sensorLight,sensorManager.SENSOR_DELAY_NORMAL);
-
-    }
 }

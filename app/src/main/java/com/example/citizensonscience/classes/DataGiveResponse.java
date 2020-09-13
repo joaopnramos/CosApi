@@ -1,12 +1,12 @@
 package com.example.citizensonscience.classes;
 
 public class DataGiveResponse {
-    String id, projectid, donatorid;
+    String id, project, donator, givingFinished;
 
     public DataGiveResponse(String id, String projectid, String donatorid) {
         this.id = id;
-        this.projectid = projectid;
-        this.donatorid = donatorid;
+        this.project = projectid;
+        this.donator = donatorid;
     }
 
     public String getId() {
@@ -18,18 +18,18 @@ public class DataGiveResponse {
     }
 
     public String getProjectid() {
-        return projectid;
+        return project;
     }
 
     public void setProjectid(String projectid) {
-        this.projectid = projectid;
+        this.project = projectid;
     }
 
     public String getDonatorid() {
-        return donatorid;
+        return donator;
     }
 
     public void setDonatorid(String donatorid) {
-        this.donatorid = donatorid;
+        this.donator = donatorid;
     }
 }
