@@ -53,7 +53,7 @@ public class DataCollector extends AppCompatActivity implements SensorEventListe
 
 
         sensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
-        sensorAcelarato = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+        sensorAcelarato = sensorManager.getDefaultSensor(Sensor.TYPE_TEMPERATURE);
         sensorManager.registerListener((SensorEventListener) this, sensortemperature, sensorManager.SENSOR_DELAY_NORMAL);
 
         sensorPressure = sensorManager.getDefaultSensor(Sensor.TYPE_PROXIMITY);
@@ -151,7 +151,7 @@ public class DataCollector extends AppCompatActivity implements SensorEventListe
     @Override
     public void onSensorChanged(SensorEvent sensorEvent) {
 
-        if (sensorEvent.sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
+        if (sensorEvent.sensor.getType() == Sensor.TYPE_TEMPERATURE) {
             for (Job j : jobs) {
                 j.setTemperature(String.valueOf(sensorEvent.values[0]));
             }
