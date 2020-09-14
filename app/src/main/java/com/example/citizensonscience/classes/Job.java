@@ -1,18 +1,64 @@
 package com.example.citizensonscience.classes;
 
+import com.example.citizensonscience.Netwowk.RetrofitClient;
+
 import java.util.TimerTask;
 
-public class Job extends TimerTask {
-    private String s1= "", s2= "", s3= "", s4= "";
-    private int Period;
-    private String id;
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
-    public String getId() {
-        return id;
+public class Job extends TimerTask {
+    private String temperature = "0.0", proximity = "0.0", light = "0.0", pressure = "0.0";
+    private int Period;
+    private String project;
+    private String owner;
+    private String token;
+    private String DG;
+
+    public String getDG() {
+        return DG;
     }
 
-    public void setId(String id) {
-        this.id = id;
+    public void setDG(String DG) {
+        this.DG = DG;
+    }
+
+    public Job() {
+    }
+
+    public Job(String temperature, String proximity, String light, String pressure, String project, String owner) {
+        this.temperature = temperature;
+        this.proximity = proximity;
+        this.light = light;
+        this.pressure = pressure;
+        this.project = project;
+        this.owner = owner;
+
+    }
+
+    public String getToken() {
+        return token;
+    }
+
+    public void setToken(String token) {
+        this.token = token;
+    }
+
+    public String getOwner() {
+        return owner;
+    }
+
+    public void setOwner(String owner) {
+        this.owner = owner;
+    }
+
+    public String getProject() {
+        return project;
+    }
+
+    public void setProject(String project) {
+        this.project = project;
     }
 
     public int getPeriod() {
@@ -23,36 +69,36 @@ public class Job extends TimerTask {
         Period = period;
     }
 
-    public String getS1() {
-        return s1;
+    public String getTemperature() {
+        return temperature;
     }
 
-    public void setS1(String s1) {
-        this.s1 = s1;
+    public void setTemperature(String temperature) {
+        this.temperature = temperature;
     }
 
-    public String getS2() {
-        return s2;
+    public String getProximity() {
+        return proximity;
     }
 
-    public void setS2(String s2) {
-        this.s2 = s2;
+    public void setProximity(String proximity) {
+        this.proximity = proximity;
     }
 
-    public String getS3() {
-        return s3;
+    public String getLight() {
+        return light;
     }
 
-    public void setS3(String s3) {
-        this.s3 = s3;
+    public void setLight(String light) {
+        this.light = light;
     }
 
-    public String getS4() {
-        return s4;
+    public String getPressure() {
+        return pressure;
     }
 
-    public void setS4(String s4) {
-        this.s4 = s4;
+    public void setPressure(String pressure) {
+        this.pressure = pressure;
     }
 
     int timesToRun = 0;
@@ -61,23 +107,53 @@ public class Job extends TimerTask {
         this.timesToRun = timesToRun;
     }
 
-    public int  runTimes = 0;
+    public int runTimes = 0;
+
     @Override
     public void run() {
 
 
-
-        System.out.println("Projeto id: " +  id );
-        System.out.println("sensor 1 " + s1);
-        System.out.println("sensor 2 " + s2);
-        System.out.println("sensor 3 " + s3);
-        System.out.println("sensor 4 " + s4);
+        System.out.println("Projeto id: " + project);
+        System.out.println("sensor 1 " + temperature);
+        System.out.println("sensor 2 " + proximity);
+        System.out.println("sensor 3 " + light);
+        System.out.println("sensor 4 " + pressure);
 
         runTimes++;
         if (runTimes >= timesToRun) {
+            DataGiveResponse dt = new DataGiveResponse();
+            dt.setGivingFinished("true");
+            Call<DataGiveResponse> send = RetrofitClient.getmInstance().getApi().endProject(token, this.DG, dt);
+            send.enqueue(new Callback<DataGiveResponse>() {
+                @Override
+                public void onResponse(Call<DataGiveResponse> call, Response<DataGiveResponse> response) {
+                    System.out.println("Done");
+                    System.out.println(response.message());
+                }
+
+                @Override
+                public void onFailure(Call<DataGiveResponse> call, Throwable t) {
+                }
+            });
+
             this.cancel();
 
         }
+
+        Job data = new Job(temperature, proximity, light, pressure, project, owner);
+        Call<Job> lets = RetrofitClient.getmInstance().getApi().inserData(token, data);
+        lets.enqueue(new Callback<Job>() {
+            @Override
+            public void onResponse(Call<Job> call, Response<Job> response) {
+                System.out.println(response);
+            }
+
+            @Override
+            public void onFailure(Call<Job> call, Throwable t) {
+
+            }
+        });
+
 
     }
 }

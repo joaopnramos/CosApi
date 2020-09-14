@@ -9,7 +9,6 @@ import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.os.Bundle;
-import android.text.format.Time;
 import android.widget.TextView;
 
 import com.example.citizensonscience.Netwowk.RetrofitClient;
@@ -21,14 +20,11 @@ import com.example.citizensonscience.classes.Project;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Date;
+import java.util.Hashtable;
 import java.util.List;
 import java.util.Timer;
-import java.util.TimerTask;
 
 import retrofit2.Call;
-import retrofit2.Callback;
-import retrofit2.Response;
 
 public class DataCollector extends AppCompatActivity implements SensorEventListener {
     private TextView id;
@@ -44,6 +40,8 @@ public class DataCollector extends AppCompatActivity implements SensorEventListe
     private Timer timeTask = new Timer();
     private List<Job> jobs = new ArrayList<>();
     private boolean bdone = false;
+    Hashtable<String , Integer  > timeDictionary = new Hashtable<String, Integer>();
+
 
     private int runTimes = 0;
 
@@ -56,17 +54,17 @@ public class DataCollector extends AppCompatActivity implements SensorEventListe
 
         sensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
         sensorAcelarato = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
-        sensorManager.registerListener((SensorEventListener) this, sensorAcelarato, sensorManager.SENSOR_DELAY_NORMAL);
+        sensorManager.registerListener((SensorEventListener) this, sensortemperature, sensorManager.SENSOR_DELAY_NORMAL);
 
-        sensorPressure = sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY);
-        sensorManager.registerListener((SensorEventListener) this, sensorPressure, sensorManager.SENSOR_DELAY_NORMAL);
-
-        sensorProximity = sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
+        sensorPressure = sensorManager.getDefaultSensor(Sensor.TYPE_PROXIMITY);
         sensorManager.registerListener((SensorEventListener) this, sensorProximity, sensorManager.SENSOR_DELAY_NORMAL);
 
+        sensorProximity = sensorManager.getDefaultSensor(Sensor.TYPE_LIGHT);
+        sensorManager.registerListener((SensorEventListener) this, sensorAcelarato, sensorManager.SENSOR_DELAY_NORMAL);
 
-        sensortemperature = sensorManager.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR);
-        sensorManager.registerListener((SensorEventListener) this, sensortemperature, sensorManager.SENSOR_DELAY_NORMAL);
+
+        sensortemperature = sensorManager.getDefaultSensor(Sensor.TYPE_PRESSURE);
+        sensorManager.registerListener((SensorEventListener) this, sensorPressure, sensorManager.SENSOR_DELAY_NORMAL);
 
 
         id = findViewById(R.id.textView2);
@@ -109,6 +107,7 @@ public class DataCollector extends AppCompatActivity implements SensorEventListe
                 final DataGiveResponse project = projectList.get(i);
                 //id dos projetos
                 final String projectid = project.getProjectid();
+                final String dgID = project.getId();
 
                 Call<Project> info = RetrofitClient.getmInstance().getApi().infoProjeto(projectid, sendToken);
 
@@ -117,10 +116,14 @@ public class DataCollector extends AppCompatActivity implements SensorEventListe
                     proj = info.execute().body();
                     final int timesRun = proj.getPeriodChoice();
                     timeTask = new Timer();
+                    System.out.println();
                     Job j = new Job();
+                    j.setDG(dgID);
                     j.setPeriod(proj.getSpacetimeChoice());
-                    j.setId(projectid);
+                    j.setProject(projectid);
+                    j.setOwner(idDonator);
                     j.setTimesToRun(timesRun);
+                    j.setToken(sendToken);
                     jobs.add(j);
                 } catch (IOException e) {
                     e.printStackTrace();
@@ -132,10 +135,15 @@ public class DataCollector extends AppCompatActivity implements SensorEventListe
             System.out.println("Não ouve resposta");
         }
 
-
+        timeDictionary.put("30", 30000);
+        timeDictionary.put("1", 60000);
+        timeDictionary.put("2", 7200000);
+        timeDictionary.put("12", 43200000);
+        timeDictionary.put("24", 86400000);
 
         for (Job j : jobs) {
-            timeTask.scheduleAtFixedRate(j, 1000, j.getPeriod()*1000);
+            String s = String.valueOf(j.getPeriod());
+            timeTask.scheduleAtFixedRate(j, 1000, timeDictionary.get(s));
         }
 
     }
@@ -145,33 +153,30 @@ public class DataCollector extends AppCompatActivity implements SensorEventListe
 
         if (sensorEvent.sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
             for (Job j : jobs) {
-                j.setS1(String.valueOf(sensorEvent.values[0]));
+                j.setTemperature(String.valueOf(sensorEvent.values[0]));
             }
 
 
         }
-        if (sensorEvent.sensor.getType() == Sensor.TYPE_GRAVITY) {
+        if (sensorEvent.sensor.getType() == Sensor.TYPE_PROXIMITY) {
             for (Job j : jobs) {
-                j.setS2(String.valueOf(sensorEvent.values[0]));
+                j.setProximity(String.valueOf(sensorEvent.values[0]));
             }
 
 
         }
-        if (sensorEvent.sensor.getType() == Sensor.TYPE_GYROSCOPE) {
+        if (sensorEvent.sensor.getType() == Sensor.TYPE_LIGHT) {
             for (Job j : jobs) {
-                j.setS3(String.valueOf(sensorEvent.values[0]));
+                j.setLight(String.valueOf(sensorEvent.values[0]));
             }
 
 
         }
-        if (sensorEvent.sensor.getType() == Sensor.TYPE_ROTATION_VECTOR) {
+        if (sensorEvent.sensor.getType() == Sensor.TYPE_PRESSURE) {
             for (Job j : jobs) {
-                j.setS4(String.valueOf(sensorEvent.values[0]));
+                j.setPressure(String.valueOf(sensorEvent.values[0]));
             }
-
-
         }
-
     }
 
     @Override
