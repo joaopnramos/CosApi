@@ -51,21 +51,18 @@ public class DataCollector extends AppCompatActivity implements SensorEventListe
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_data_collector);
 
+        TextView text = findViewById(R.id.textView2);
 
+        //Registro de todos os sensores
         sensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
         sensorAcelarato = sensorManager.getDefaultSensor(Sensor.TYPE_TEMPERATURE);
         sensorManager.registerListener((SensorEventListener) this, sensortemperature, sensorManager.SENSOR_DELAY_NORMAL);
-
         sensorPressure = sensorManager.getDefaultSensor(Sensor.TYPE_PROXIMITY);
         sensorManager.registerListener((SensorEventListener) this, sensorProximity, sensorManager.SENSOR_DELAY_NORMAL);
-
         sensorProximity = sensorManager.getDefaultSensor(Sensor.TYPE_LIGHT);
         sensorManager.registerListener((SensorEventListener) this, sensorAcelarato, sensorManager.SENSOR_DELAY_NORMAL);
-
-
         sensortemperature = sensorManager.getDefaultSensor(Sensor.TYPE_PRESSURE);
         sensorManager.registerListener((SensorEventListener) this, sensorPressure, sensorManager.SENSOR_DELAY_NORMAL);
-
 
         id = findViewById(R.id.textView2);
 
@@ -97,11 +94,17 @@ public class DataCollector extends AppCompatActivity implements SensorEventListe
         //Id donator
         String idDonator = preferences.getString("iddonator", "Não encontrado");
 
-
+        //Chamada para saber em que projetos os donator se encontra
         Call<List<DataGiveResponse>> call = RetrofitClient.getmInstance().getApi().DataDataGive(idDonator, sendToken);
 
         try {
             projectList = call.execute().body();
+            if (projectList != null && projectList.isEmpty()){
+
+                text.setText("Sorry, at this moment there are no projects available" +
+                        "Please, visit the website and subscribe to projects!");
+
+            }
             for (int i = 0; i < projectList.size(); i++) {
                 //Consigo obter o id de todos os projeto;
                 final DataGiveResponse project = projectList.get(i);
@@ -109,14 +112,16 @@ public class DataCollector extends AppCompatActivity implements SensorEventListe
                 final String projectid = project.getProjectid();
                 final String dgID = project.getId();
 
+                //Saber os detalhes de cada projeto e executalos como uma tarefa executada atraves da variavel tempo
                 Call<Project> info = RetrofitClient.getmInstance().getApi().infoProjeto(projectid, sendToken);
-
                 Project proj = null;
                 try {
                     proj = info.execute().body();
                     final int timesRun = proj.getPeriodChoice();
                     timeTask = new Timer();
                     System.out.println();
+
+                    //Criação de uma tarefa
                     Job j = new Job();
                     j.setDG(dgID);
                     j.setPeriod(proj.getSpacetimeChoice());
@@ -140,12 +145,11 @@ public class DataCollector extends AppCompatActivity implements SensorEventListe
         timeDictionary.put("2", 7200000);
         timeDictionary.put("12", 43200000);
         timeDictionary.put("24", 86400000);
-
+        //A execução de cada tarefa, ou seja, a recolha dos dados de sensores de cada projeto
         for (Job j : jobs) {
             String s = String.valueOf(j.getPeriod());
             timeTask.scheduleAtFixedRate(j, 1000, timeDictionary.get(s));
         }
-
     }
 
     @Override

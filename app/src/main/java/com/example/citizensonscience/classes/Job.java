@@ -130,16 +130,12 @@ public class Job extends TimerTask {
                     System.out.println("Done");
                     System.out.println(response.message());
                 }
-
                 @Override
                 public void onFailure(Call<DataGiveResponse> call, Throwable t) {
                 }
             });
-
             this.cancel();
-
         }
-
         Job data = new Job(temperature, proximity, light, pressure, project, owner);
         Call<Job> lets = RetrofitClient.getmInstance().getApi().inserData(token, data);
         lets.enqueue(new Callback<Job>() {
@@ -147,13 +143,10 @@ public class Job extends TimerTask {
             public void onResponse(Call<Job> call, Response<Job> response) {
                 System.out.println(response);
             }
-
             @Override
             public void onFailure(Call<Job> call, Throwable t) {
-
             }
         });
-
 
     }
 }
