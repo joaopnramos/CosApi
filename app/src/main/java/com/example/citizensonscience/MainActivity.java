@@ -1,9 +1,11 @@
 package com.example.citizensonscience;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.constraintlayout.widget.ConstraintLayout;
 
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.graphics.drawable.AnimationDrawable;
 import android.os.Bundle;
 import android.os.StrictMode;
 import android.view.View;
@@ -21,6 +23,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     private EditText editTextPassword, editTextUsername;
     private static final String ARQUIVO_PREFERENCIA = "ArquivoPreferencia";
+    private ConstraintLayout layout;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -29,6 +32,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         StrictMode.setThreadPolicy(policy);
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        layout = findViewById(R.id.main);
+        AnimationDrawable animD = (AnimationDrawable) layout.getBackground();
+        animD.setEnterFadeDuration(2000);
+        animD.setExitFadeDuration(4000);
+        animD.start();
 
         editTextPassword = findViewById(R.id.password);
         editTextUsername = findViewById(R.id.username);

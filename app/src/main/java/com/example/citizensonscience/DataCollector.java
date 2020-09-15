@@ -1,9 +1,11 @@
 package com.example.citizensonscience;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.constraintlayout.widget.ConstraintLayout;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.graphics.drawable.AnimationDrawable;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
@@ -44,7 +46,7 @@ public class DataCollector extends AppCompatActivity implements SensorEventListe
     private boolean bdone = false;
     Hashtable<String , Integer  > timeDictionary = new Hashtable<String, Integer>();
 
-
+    private ConstraintLayout layout;
     private int runTimes = 0;
 
 
@@ -54,13 +56,18 @@ public class DataCollector extends AppCompatActivity implements SensorEventListe
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_data_collector);
 
+        layout = findViewById(R.id.main1);
+        AnimationDrawable animD = (AnimationDrawable) layout.getBackground();
+        animD.setEnterFadeDuration(2000);
+        animD.setExitFadeDuration(4000);
+        animD.start();
 
         TextView text = findViewById(R.id.textView2);
         TextView text1 = findViewById(R.id.textView3);
 
         //Registro de todos os sensores
         sensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
-        sensorAcelarato = sensorManager.getDefaultSensor(Sensor.TYPE_TEMPERATURE);
+        sensorAcelarato = sensorManager.getDefaultSensor(Sensor.TYPE_AMBIENT_TEMPERATURE);
         sensorManager.registerListener((SensorEventListener) this, sensortemperature, sensorManager.SENSOR_DELAY_NORMAL);
         sensorPressure = sensorManager.getDefaultSensor(Sensor.TYPE_PROXIMITY);
         sensorManager.registerListener((SensorEventListener) this, sensorProximity, sensorManager.SENSOR_DELAY_NORMAL);
@@ -160,7 +167,7 @@ public class DataCollector extends AppCompatActivity implements SensorEventListe
     @Override
     public void onSensorChanged(SensorEvent sensorEvent) {
 
-        if (sensorEvent.sensor.getType() == Sensor.TYPE_TEMPERATURE) {
+        if (sensorEvent.sensor.getType() == Sensor.TYPE_AMBIENT_TEMPERATURE) {
             for (Job j : jobs) {
                 j.setTemperature(String.valueOf(sensorEvent.values[0]));
             }
