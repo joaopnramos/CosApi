@@ -4,5 +4,9 @@
     <string name="username">Username</string>
     <string name="password">Password</string>
     <string name="welcome">Welcome!</string>
+    <string name="start">We are executing all projects</string>
+    <string name="start1"> Thank you for your contribution</string>
+    <string name="start2">João and Mariana</string>
+
 
 </resources>
