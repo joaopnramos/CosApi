@@ -9,6 +9,8 @@ import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.os.Bundle;
+import android.webkit.WebSettings;
+import android.webkit.WebView;
 import android.widget.TextView;
 
 import com.example.citizensonscience.Netwowk.RetrofitClient;
@@ -46,12 +48,15 @@ public class DataCollector extends AppCompatActivity implements SensorEventListe
     private int runTimes = 0;
 
 
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_data_collector);
 
+
         TextView text = findViewById(R.id.textView2);
+        TextView text1 = findViewById(R.id.textView3);
 
         //Registro de todos os sensores
         sensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
@@ -101,8 +106,8 @@ public class DataCollector extends AppCompatActivity implements SensorEventListe
             projectList = call.execute().body();
             if (projectList != null && projectList.isEmpty()){
 
-                text.setText("Sorry, at this moment there are no projects available" +
-                        "Please, visit the website and subscribe to projects!");
+                text.setText("Sorry, at this moment there are no projects available");
+                text1.setText("Please, visit the website and subscribe to projects!");
 
             }
             for (int i = 0; i < projectList.size(); i++) {
